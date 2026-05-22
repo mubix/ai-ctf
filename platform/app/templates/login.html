@@ -1,0 +1,35 @@
+{% extends "base.html" %} {% block title %}Login — Anvil Industries{% endblock
+%} {% block body %}
+<main class="auth">
+  <img src="/static/logo.jpg" alt="Anvil Industries" class="logo" />
+  <h1>Anvil Industries</h1>
+  <h2>AI Console — Login</h2>
+
+  <form method="post" action="/login">
+    <label for="username">Username</label>
+    <input
+      id="username"
+      name="username"
+      type="text"
+      required
+      autofocus
+      maxlength="32"
+    />
+    <label for="password">Password</label>
+    <input
+      id="password"
+      name="password"
+      type="password"
+      required
+      maxlength="64"
+    />
+    <button type="submit">Log in</button>
+  </form>
+
+  <p>No account yet? <a href="/">Register</a>.</p>
+
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+</main>
+{% endblock %}

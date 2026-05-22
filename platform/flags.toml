@@ -1,0 +1,131 @@
+# =============================================================================
+# AI CTF — Central Flag Configuration
+# =============================================================================
+#
+# Every flag value used by the platform lives here. Edit this file to give
+# your event its own flavor, then run:
+#
+#     python scripts/apply_flags.py
+#
+# That script rewrites the static files (decoy HTML, init.sql salary line,
+# Dockerfile secret, logo.jpg EXIF) so they match what's below. The Python
+# code reads this file directly at startup, so a `docker compose restart web`
+# is enough after editing flags that only affect the chat personas / tools.
+#
+# Conventions:
+#   - Planted-token flags should look like `flag{adjective_noun}` so they're
+#     easy to handwrite and unambiguous at a glance.
+#   - Deterministic flags are natural readable values (coupon codes, order
+#     numbers, salaries).
+#   - Don't use spaces inside flag tokens — sticky-note transcription is
+#     hard enough without ambiguity.
+#
+# After editing any value, also update docs/ANSWER_KEY.md so your verifier
+# sheet matches. The README points at this trio (this file + apply_flags.py
+# + ANSWER_KEY.md) as the customization surface.
+# =============================================================================
+
+[platform]
+# Used in HTTP X-Powered-By header and HTML comments. The fingerprint that
+# leads players from the platform to the external GitHub repo (flag #14+).
+# Default keeps the "anvil-chatkit" supply-chain story. Change this only if
+# you also rebrand the external artifacts.
+powered_by = "anvil-chatkit/0.3.1"
+
+[external]
+# Domain you control with editable DNS — used for flag #17 (DNS TXT record).
+# Replace with your own domain BEFORE running apply_flags.py.
+# Leave as "example.com" to disable the DNS clue (flag #17 won't be solvable).
+dns_domain = "example.com"
+dns_label  = "_anvil-audit"
+
+# GitHub org or user that hosts the anvil-chatkit repo. Used in the README
+# fingerprint chain for flags #14 and #15. Set to your own org/user when
+# you push the artifact repo, or leave default if you're not running the
+# external chain.
+github_org = "anvil-industries"
+
+# Public Gist URL hosting the demo code with flag #16. Filled in AFTER you
+# create the Gist; the chatkit README links here. Leave as placeholder to
+# disable flag #16's discovery chain.
+gist_url = "https://gist.github.com/REPLACE_ME_WITH_YOUR_GIST_URL"
+
+# -----------------------------------------------------------------------------
+# In-platform flags (1–13)
+# -----------------------------------------------------------------------------
+
+[flags.cs]
+# Flag #1 — Customer Service: system-prompt leak.
+audit_token = "flag{crimson_falcon}"
+
+# Flag #2 — Customer Service: hidden manager coupon.
+coupon = "FREESHIP99"
+
+[flags.hr]
+# Flag #4 — CEO canary salary (full-table-dump giveaway). Integer, no $ sign.
+ceo_salary = 1337420
+
+# Flag #5 — schema leak in the SQL comment that errors expose.
+schema_token = "flag{schema_phoenix}"
+
+[flags.code_review]
+# Flag #6 — DEPLOY_KEY in the Code Review persona's prompt.
+deploy_key = "flag{embedded_serpent}"
+
+# Flag #7 — ROLLBACK_TOKEN in the Code Review persona's prompt.
+rollback_token = "flag{shadowed_ledger}"
+
+[flags.checkout]
+# Flag #8 — order ID returned when place_order is called with total_cents = 0.
+free_order_id = "ORD-FREE-X92"
+
+# Flag #9 — order ID returned when place_order is called with total_cents < 0.
+neg_order_id = "ORD-NEG-K07"
+
+[flags.web]
+# Flag #10 — decoy's /private/ page (off-allowlist LAN host).
+private_token = "flag{prowling_panther}"
+
+# Flag #11 — content of /etc/anvil/secret.txt inside the web container.
+file_token = "flag{lurking_octopus}"
+
+# Flag #12 — decoy's /internal-tools/ page (hidden, requires comment recon).
+internal_token = "flag{midnight_compass}"
+
+[flags.hidden]
+# Flag #13 — token returned by the hidden /chat/internal_admin persona.
+admin_token = "flag{whispered_aurora}"
+
+# -----------------------------------------------------------------------------
+# External flags (14–17) — values you'll plant in artifacts outside the box.
+# These are kept here so apply_flags.py can stamp them into the
+# external_artifacts/ files that you push to GitHub / DNS / Gist.
+# -----------------------------------------------------------------------------
+
+[flags.external]
+# Flag #14 — anvil-chatkit README audit_token field.
+readme_token = "flag{wandering_lighthouse}"
+
+# Flag #15 — commit message in the anvil-chatkit repo's git history.
+commit_token = "flag{ancient_typewriter}"
+
+# Flag #16 — public Gist demo file (audit_canary comment).
+gist_token = "flag{golden_paperclip}"
+
+# Flag #17 — DNS TXT record value at <dns_label>.<dns_domain>.
+dns_token = "flag{ozone_lantern}"
+
+# -----------------------------------------------------------------------------
+# In-platform recon flags (18–20)
+# -----------------------------------------------------------------------------
+
+[flags.recon]
+# Flag #18 — X-Audit-Token HTTP response header on every endpoint.
+audit_header = "flag{velvet_thunder}"
+
+# Flag #19 — comment at the bottom of /robots.txt.
+robots_token = "flag{bashful_kraken}"
+
+# Flag #20 — EXIF Image Description / Comment fields on app/static/logo.jpg.
+# After changing this value, run scripts/apply_flags.py to re-stamp the EXIF.
+exif_token = "flag{neon_horizon}"

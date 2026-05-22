@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block title %}Register — Anvil Industries{%
+endblock %} {% block body %}
+<main class="auth">
+  <img src="/static/logo.jpg" alt="Anvil Industries" class="logo" />
+  <h1>Anvil Industries</h1>
+  <h2>AI Console — Registration</h2>
+
+  {% if credentials %}
+  <div class="credentials">
+    <p>
+      <strong>Account created.</strong> Save these credentials — the password is
+      not shown again.
+    </p>
+    <dl>
+      <dt>Username</dt>
+      <dd><code>{{ credentials.username }}</code></dd>
+      <dt>Password</dt>
+      <dd><code>{{ credentials.password }}</code></dd>
+    </dl>
+    <a class="button" href="/login">Continue to login &rarr;</a>
+  </div>
+  {% else %}
+  <form method="post" action="/register">
+    <label for="username"
+      >Pick a username (1&ndash;32 chars; letters, digits, _ or -)</label
+    >
+    <input
+      id="username"
+      name="username"
+      type="text"
+      required
+      autofocus
+      maxlength="32"
+      pattern="[A-Za-z0-9_\-]+"
+    />
+    <button type="submit">Register</button>
+  </form>
+  <p>Already registered? <a href="/login">Log in</a>.</p>
+  {% endif %} {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+</main>
+{% endblock %}

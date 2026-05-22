@@ -1,0 +1,35 @@
+DNS records to set on example.com
+=================================
+
+These values are mirrored from `platform/flags.toml`. Edit the TOML and run
+`python platform/scripts/apply_flags.py` to refresh this file with your own
+domain and token, then create the record below in your DNS provider.
+
+Add ONE TXT record on the subdomain `_anvil-audit.example.com`.
+
+Record:
+  Name:  _anvil-audit.example.com
+  Type:  TXT
+  TTL:   300
+  Value: "anvil-industries-audit-canary:flag{ozone_lantern}"
+
+Provider-specific note: most DNS UIs expect just `_anvil-audit` in the "name" field
+(the apex `example.com.` is implied). The value should be entered WITH the
+surrounding double quotes if your provider's UI shows raw zone-file syntax, or
+WITHOUT quotes if it's a simple text-input field.
+
+Verification (run from any internet-connected machine):
+
+    dig TXT _anvil-audit.example.com +short
+
+Expected output:
+
+    "anvil-industries-audit-canary:flag{ozone_lantern}"
+
+Players will discover this canary via the `domain_audit_canary` field in
+anvil-chatkit's README.md. They will run the `dig` command and submit the value.
+
+Pre-event check:
+- Set this record at least 1 hour before the event so DNS propagation completes.
+- Confirm with `dig TXT _anvil-audit.example.com @8.8.8.8 +short` to test against
+  a non-cached resolver.

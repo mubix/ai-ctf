@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# Generation / AI-tooling artifacts — do not publish
+# ---------------------------------------------------------------------------
+CLAUDE.md
+.claude/
+.cursor/
+.aider*
+PLAN.md
+memory/
+
+# ---------------------------------------------------------------------------
+# Local dev / runtime artifacts
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.env
+.env.local
+*.log
+.DS_Store
+
+# SQLite DB created at runtime (bind-mounted into the web container)
+platform/data/ctf.db
+platform/data/ctf.db-journal
+
+# Vendored at Docker build time (Dockerfile pulls it from unpkg)
+platform/app/static/htmx.min.js
+
+# Backup files from various tools
+*.bak
+*.swp
+*~
+
+# ---------------------------------------------------------------------------
+# external_artifacts/anvil_chatkit/.git
+# ---------------------------------------------------------------------------
+# The chatkit subdirectory has (or will get) its OWN git history — that
+# history is the artifact that carries flag #15. It must NOT be a nested
+# repo inside ai-ctf's git tree. Keep it locally if you want to push
+# directly from this checkout, otherwise it's fine to delete.
+external_artifacts/anvil_chatkit/.git/

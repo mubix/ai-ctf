@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+data/ctf.db
+data/ctf.db-journal
+*.log

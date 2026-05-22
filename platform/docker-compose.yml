@@ -1,0 +1,39 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SESSION_SECRET: "${SESSION_SECRET:-dev-secret-change-me-before-event}"
+      OLLAMA_HOST: "http://ollama:11434"
+      OLLAMA_MODEL: "qwen2.5:7b-instruct-q4_K_M"
+      DECOY_HOST: "http://decoy:80"
+    volumes:
+      - ./data:/data
+      # Mount flags.toml so host-side edits take effect on
+      # `docker compose restart web` (no rebuild needed).
+      - ./flags.toml:/app/flags.toml:ro
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # First-run setup (one-time, while box still has internet):
+    #   docker compose exec ollama ollama pull qwen2.5:7b-instruct-q4_K_M
+
+  decoy:
+    build: ./decoy
+    expose:
+      - "80"
+    restart: unless-stopped
+    # Reachable from the `web` container as http://decoy/  but not from the
+    # host. Players can only hit it via the web_retrieval bot's fetch_url.
+
+volumes:
+  ollama_data:

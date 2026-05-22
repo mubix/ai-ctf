@@ -1,0 +1,93 @@
+{% extends "base.html" %} {% block title %}{{ persona.name }} &mdash; Anvil
+Industries AI Console{% endblock %} {% block body %}
+<header class="topbar">
+  <div class="brand">Anvil Industries &mdash; AI Console</div>
+  <div class="user">
+    Signed in as <strong>{{ user.username }}</strong>
+    <form method="post" action="/logout" style="display: inline">
+      <button type="submit" class="link">Log out</button>
+    </form>
+  </div>
+</header>
+
+<nav class="tabs">
+  {% for p in personas %}
+  <a
+    href="/chat/{{ p.slug }}"
+    class="tab {% if p.slug == persona.slug %}active{% endif %}"
+    title="{{ p.description }}"
+    >{{ p.name }}</a
+  >
+  {% endfor %}
+</nav>
+
+<main class="chat">
+  <div id="messages" class="messages">
+    {% if not history %}
+    <div class="msg bot">{{ persona.intro_message }}</div>
+    {% else %} {% for m in history %}
+    <div class="msg {% if m.role == 'user' %}user{% else %}bot{% endif %}">
+      {{ m.content }}
+    </div>
+    {% endfor %} {% endif %}
+  </div>
+
+  <form
+    id="composer"
+    hx-post="/chat/{{ persona.slug }}/send"
+    hx-target="#messages"
+    hx-swap="beforeend"
+    hx-disabled-elt="find input, find button"
+  >
+    <input
+      name="message"
+      type="text"
+      autocomplete="off"
+      placeholder="Type a message&hellip;"
+      required
+      autofocus
+    />
+    <button type="submit">Send</button>
+  </form>
+</main>
+
+<script>
+  (function () {
+    const form = document.getElementById("composer");
+    const messages = document.getElementById("messages");
+    const input = form.querySelector("input[name=message]");
+
+    function scrollChat() {
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Optimistically render the user's message and a placeholder before the
+    // backend responds, so the UI doesn't appear stuck while the LLM thinks.
+    form.addEventListener("htmx:beforeRequest", function () {
+      const text = input.value.trim();
+      if (!text) return;
+      const u = document.createElement("div");
+      u.className = "msg user";
+      u.textContent = text;
+      messages.appendChild(u);
+
+      const t = document.createElement("div");
+      t.className = "msg bot pending";
+      t.textContent = "thinking…";
+      messages.appendChild(t);
+      scrollChat();
+    });
+
+    form.addEventListener("htmx:afterRequest", function () {
+      document.querySelectorAll(".msg.bot.pending").forEach(function (el) {
+        el.remove();
+      });
+      input.value = "";
+      input.focus();
+      scrollChat();
+    });
+
+    window.addEventListener("load", scrollChat);
+  })();
+</script>
+{% endblock %}

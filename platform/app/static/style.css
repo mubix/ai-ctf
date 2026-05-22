@@ -1,0 +1,263 @@
+:root {
+  --bg: #0f1115;
+  --panel: #181a20;
+  --panel-2: #232733;
+  --text: #e6e8ee;
+  --muted: #9099a8;
+  --accent: #ff8a3d;
+  --user: #1f3957;
+  --bot: #2a2e3a;
+  --border: #2c303b;
+  --error: #ff5f5f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  background: var(--panel-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+  font-size: 0.95em;
+}
+
+/* ------------------------------- Auth pages ------------------------------ */
+
+main.auth {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 32px;
+  background: var(--panel);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+main.auth .logo {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  margin: 0 auto 20px;
+  border-radius: 4px;
+}
+main.auth h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+main.auth h2 {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: normal;
+}
+main.auth form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+main.auth label {
+  font-size: 13px;
+  color: var(--muted);
+}
+main.auth input {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font: inherit;
+}
+main.auth input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+main.auth button {
+  background: var(--accent);
+  color: #1a1a1a;
+  border: 0;
+  padding: 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+main.auth .credentials {
+  background: var(--panel-2);
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+main.auth .credentials dl {
+  margin: 12px 0 0;
+}
+main.auth .credentials dt {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+main.auth .credentials dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+}
+main.auth .credentials a.button {
+  display: inline-block;
+  margin-top: 16px;
+  background: var(--accent);
+  color: #1a1a1a;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+main.auth .error {
+  color: var(--error);
+  margin-top: 12px;
+}
+
+/* --------------------------------- Chat ---------------------------------- */
+
+header.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+header.topbar .brand {
+  font-weight: 600;
+}
+header.topbar .user {
+  color: var(--muted);
+  font-size: 13px;
+}
+header.topbar button.link {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 0;
+  font: inherit;
+}
+
+nav.tabs {
+  display: flex;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  overflow-x: auto;
+}
+nav.tabs .tab {
+  padding: 12px 16px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+nav.tabs .tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+nav.tabs .tab:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+main.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+  min-height: 0;
+}
+main.chat .messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+main.chat .msg {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+main.chat .msg.user {
+  align-self: flex-end;
+  background: var(--user);
+}
+main.chat .msg.bot {
+  align-self: flex-start;
+  background: var(--bot);
+}
+main.chat .msg.bot.pending {
+  color: var(--muted);
+  font-style: italic;
+}
+main.chat #composer {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+main.chat #composer input {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font: inherit;
+}
+main.chat #composer input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+main.chat #composer input:disabled {
+  opacity: 0.6;
+}
+main.chat #composer button {
+  background: var(--accent);
+  color: #1a1a1a;
+  border: 0;
+  padding: 0 18px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+main.chat #composer button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
