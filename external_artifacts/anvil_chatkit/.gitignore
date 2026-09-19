@@ -5,4 +5,6 @@ build/
 dist/
 .venv/
 .env
+# Keep the bootstrap script out of the generated challenge repository's history.
+# The parent training repository intentionally tracks setup-history.sh.
 *.sh
