@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------------
 CLAUDE.md
 .claude/
+.codex/
 .cursor/
 .aider*
 PLAN.md
@@ -19,12 +20,23 @@ __pycache__/
 venv/
 .env
 .env.local
+.env.*
+!.env.example
 *.log
 .DS_Store
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
 
-# SQLite DB created at runtime (bind-mounted into the web container)
-platform/data/ctf.db
-platform/data/ctf.db-journal
+# This bind-mounted directory contains private runtime data. Only ship its seed.
+platform/data/*
+!platform/data/init.sql
+
+# Chat exports contain player messages; deployment bundles are generated locally.
+ctf_log*.html
+ai-ctf-*.tar.gz
 
 # Vendored at Docker build time (Dockerfile pulls it from unpkg)
 platform/app/static/htmx.min.js

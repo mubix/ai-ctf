@@ -1,8 +1,10 @@
+name: ai-ctf
+
 services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "${CTF_WEB_PORT:-18080}:8000"
     environment:
       SESSION_SECRET: "${SESSION_SECRET:-dev-secret-change-me-before-event}"
       OLLAMA_HOST: "http://ollama:11434"
@@ -19,8 +21,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
+    # Private to this Compose project's network. No host port or shared model server.
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
@@ -36,4 +37,5 @@ services:
     # host. Players can only hit it via the web_retrieval bot's fetch_url.
 
 volumes:
+  # Compose prefixes this volume with the project name; no external volume is used.
   ollama_data:

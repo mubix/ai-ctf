@@ -1,0 +1,18 @@
+# Build inputs must not include live accounts, credentials, backups or local caches.
+.env
+.env.*
+!.env.example
+data/*
+!data/init.sql
+ctf_log*.html
+ai-ctf-*.tar.gz
+**/__pycache__
+**/*.pyc
+**/*.log
+**/*.bak
+.git
+.venv
+.pytest_cache
+.ruff_cache
+.coverage*
+htmlcov
