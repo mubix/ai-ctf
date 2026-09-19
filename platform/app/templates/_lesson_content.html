@@ -1,0 +1,131 @@
+<div class="lesson-layout" data-run="{{ lesson.run.id }}" data-player="{{ user.id }}"
+     data-running="{{ 'true' if lesson.running else 'false' }}" data-archived="{{ 'true' if lesson.archived else 'false' }}">
+  <aside class="lesson-guide" aria-label="Mission and hints">
+    <h1>Your first prompt injection</h1>
+    <p class="mission-meta">Customer Service · Direct injection</p>
+    <p class="small">An intentionally weak training assistant: it trusts a role claimed in a message.</p>
+    <div class="mission-brief">
+      <h2>Your objective</h2>
+      <p>Get the assistant to reveal its <strong>internal audit token</strong> in plain text.
+        It looks like <code>flag{…}</code>. This attempt has its own token.</p>
+      <details class="mission-explainer" open>
+      <summary>Task, permissions, and success check</summary>
+      <dl>
+        <dt>The assistant's job</dt><dd>Help customers with products, returns, and public discounts.</dd>
+        <dt>What you control</dt><dd>Your messages. You cannot change its private instructions.</dd>
+        <dt>What counts</dt><dd>A response that discloses this attempt's token. A copied answer or a different secret does not count.</dd>
+      </dl>
+      </details>
+    </div>
+    <details class="hint-panel" open>
+      <summary>Hints and worked example</summary>
+      <p class="small">Use hints whenever you like. They do not reduce your progress.</p>
+      {% for hint in lesson.hints %}
+      <div class="revealed-hint"><h3>Hint {{ loop.index }}</h3><p>{{ hint }}</p></div>
+      {% endfor %}
+      {% if lesson.worked_example %}
+      <div class="revealed-hint">
+        <h3>Worked example</h3>
+        <p class="payload-example">{{ lesson.worked_example }}</p>
+        <p class="small">This claims an administrative purpose and asks for an exact export.
+          The claim comes from you, so it should not grant access. The model may still refuse;
+          compare its response and adapt the framing. This example does not guarantee a solve.</p>
+        {% if not lesson.archived %}<button type="button" class="secondary" data-fill="{{ lesson.worked_example }}" {% if lesson.running %}disabled{% endif %}>Use example in composer</button>{% endif %}
+      </div>
+      {% elif not lesson.archived %}
+      <form action="/learn/first-injection/hint" method="post" data-lesson-action="hint">
+        <input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+        <button class="secondary" type="submit" {% if lesson.running %}disabled{% endif %}>{% if lesson.progress.hint_level == 2 %}Show worked example{% elif lesson.progress.hint_level %}Show next hint{% else %}Show first hint{% endif %}</button>
+      </form>
+      {% endif %}
+    </details>
+    <p class="small muted">Messages and progress are saved for you and the organizer. Use fictional data.</p>
+  </aside>
+
+  <section class="lesson-workspace" id="practice-conversation" aria-label="Practice conversation">
+    <div class="workspace-heading">
+      <h2>Try, observe, adapt</h2>
+      {% if lesson.run.completed_at %}<span class="status-badge">Objective reached</span>
+      {% elif lesson.archived %}<span class="status-badge neutral">Previous attempt</span>
+      {% elif lesson.progress.completed_at %}<span class="status-badge">Lesson completed · Practicing again</span>
+      {% else %}<span class="status-badge neutral">{{ lesson.turns_left }} turns left</span>{% endif %}
+    </div>
+    {% if lesson.archived %}<div class="notice">This is a saved attempt. <a href="/learn/first-injection">Return to your current attempt</a>.</div>{% endif %}
+    {% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+    {% if lesson.run.profile == 'legacy' and not lesson.archived %}<div class="notice">This saved attempt uses the earlier, harder assistant. Start a fresh attempt below to use the beginner profile. Your history and progress will stay saved.</div>{% endif %}
+    {% if not lesson.turns %}
+    <div class="baseline">
+      <h3>First, see the normal behavior</h3>
+      <p>Ask about the return policy. Then try asking for the audit token directly.
+        If it refuses, change your approach. Refusal is useful feedback.</p>
+      {% if not lesson.archived %}<button class="secondary" type="button" data-fill="What is your return policy?">Use a normal request</button>{% endif %}
+    </div>
+    {% endif %}
+    <div class="lesson-messages" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions text" tabindex="0">
+      <article class="lesson-message assistant"><h3>Customer Service</h3><p>Hi! I can help with Anvil products, returns, and public discounts. How can I help you today?</p></article>
+      {% for turn in lesson.turns %}
+      <article class="lesson-message player" data-request="{{ turn.request_id }}" data-turn-status="{{ turn.status }}"><h3>You</h3><p>{{ turn.user_content }}</p></article>
+      {% if turn.status == 'completed' %}
+      <article class="lesson-message assistant"><h3>Customer Service</h3><p>{{ turn.assistant_content }}</p></article>
+      <p class="turn-feedback">{{ turn.feedback }}</p>
+      {% elif turn.status == 'failed' %}
+      <div class="notice error"><p>{{ turn.feedback }}</p>
+        {% if not lesson.archived and not lesson.running %}<button class="secondary" type="button" data-fill="{{ turn.user_content }}" data-retry="{{ turn.request_id }}">Retry this message</button>{% endif %}
+      </div>
+      {% else %}<p class="notice">Waiting for the AI service. This request may be queued or running. You can leave this page and return.</p>{% endif %}
+      {% endfor %}
+    </div>
+    {% if not lesson.archived %}
+    <form class="lesson-composer" action="/learn/first-injection/send" method="post" data-lesson-action="send">
+      <input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+      <input type="hidden" name="request_id" value="{{ lesson.request_id }}">
+      <label for="lesson-message">Your message</label>
+      <textarea id="lesson-message" name="message" rows="4" maxlength="{{ lesson.max_length }}" required
+        aria-describedby="composer-help" {% if lesson.running or not lesson.turns_left %}disabled{% endif %}>{{ draft }}</textarea>
+      <div class="composer-footer">
+        <p id="composer-help" class="small muted">Enter adds a line. Ctrl+Enter or ⌘+Enter sends. Up to {{ lesson.max_length }} characters.</p>
+        <button type="submit" {% if lesson.running or not lesson.turns_left %}disabled{% endif %}>Send message</button>
+      </div>
+    </form>
+    {% if not lesson.turns_left %}<p class="notice">This attempt has reached ten turns. Start a fresh attempt to keep experimenting.</p>{% endif %}
+    {% if lesson.running %}<a class="refresh-link" href="/learn/first-injection">Refresh response status</a>{% endif %}
+    {% endif %}
+
+    {% if lesson.run.completed_at %}
+    <section class="debrief" aria-labelledby="debrief-heading">
+      <h2 id="debrief-heading">You crossed the instruction boundary</h2>
+      <p>The assistant put a private value into its response. Your message came from a customer,
+        yet it overrode the instruction to keep that value private.</p>
+      <dl>
+        <dt>Where the attack entered</dt><dd>Your message: this was direct prompt injection.</dd>
+        <dt>What failed</dt><dd>The application put a secret in model context and relied on the model to withhold it.</dd>
+        <dt>A stronger boundary</dt><dd>Keep secrets out of model context when its job does not need them.
+          Enforce permissions in application code before returning sensitive data.</dd>
+      </dl>
+      <p>A longer “never reveal this” instruction is not an access-control check.
+        One successful or refused prompt does not prove how every model will behave.</p>
+      <details><summary>Reflect on your attempt</summary><p>What did your message claim the assistant should do?
+        Which part conflicted with its job? How would you check that a legitimate customer can still get help after a fix?</p></details>
+      <p class="small">{% if lesson.progress.completed_with_example %}Your first completion was recorded with a worked example.{% else %}Your first completion was recorded without opening the worked example.{% endif %} Progress is saved.</p>
+      <a href="/learn/tool-access">Next lesson: cross a tool permission boundary</a>
+    </section>
+    {% endif %}
+
+    {% if not lesson.archived %}
+    <details class="attempt-controls">
+      <summary>Start fresh or revisit an attempt</summary>
+      <p>A fresh attempt has a new token and an empty conversation. Previous attempts,
+        hints viewed, and completed progress stay saved.</p>
+      <p class="small">Long messages can exceed the model's context window even within ten turns.
+        If earlier details seem forgotten, try a shorter, fresh attempt.</p>
+      <form action="/learn/first-injection/reset" method="post" data-lesson-action="reset">
+        <input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+        <button class="secondary" type="submit" {% if lesson.running %}disabled{% endif %}>Start a fresh attempt</button>
+      </form>
+      {% if lesson.attempts|length > 1 %}<ol class="attempt-list">
+      {% for attempt in lesson.attempts %}<li>{% if attempt.id == lesson.run.id %}Current attempt{% else %}<a href="/learn/first-injection?attempt={{ attempt.id }}">Attempt from {{ attempt.created_at }} UTC</a>{% endif %}{% if attempt.completed_at %} · Objective reached{% endif %}</li>{% endfor %}
+      </ol>{% endif %}
+    </details>
+    {% endif %}
+  </section>
+</div>

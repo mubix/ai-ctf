@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from typing import Any
@@ -16,6 +17,10 @@ MAX_HISTORY = 20
 
 # Cap on tool-call rounds within a single user turn (prevents infinite loops).
 MAX_TOOL_ITERATIONS = 6
+
+
+class ModelError(Exception):
+    """The model service failed; this is not an assistant response."""
 
 
 def get_history(user_id: int, persona_slug: str) -> list[dict]:
@@ -69,7 +74,7 @@ def _execute_tool(name: str, args_raw: Any) -> str:
     return json.dumps(result, default=str)
 
 
-async def call_ollama(persona: Persona, history: list[dict]) -> str:
+async def call_ollama(persona: Persona, history: list[dict], *, tool_executor=None) -> str:
     messages: list[dict] = [{"role": "system", "content": persona.system_prompt}]
     messages.extend(history[-MAX_HISTORY:])
 
@@ -82,22 +87,30 @@ async def call_ollama(persona: Persona, history: list[dict]) -> str:
             }
             if persona.tools:
                 payload["tools"] = persona.tools
+            if persona.options:
+                payload["options"] = persona.options
 
             try:
                 resp = await client.post(f"{OLLAMA_HOST}/api/chat", json=payload)
                 resp.raise_for_status()
                 data = resp.json()
-            except httpx.HTTPError as e:
-                return (
-                    f"[Backend error: the AI service is unreachable or slow. "
-                    f"Try again in a moment. ({type(e).__name__})]"
-                )
+            except (httpx.HTTPError, ValueError) as e:
+                raise ModelError("The AI service did not return a usable response.") from e
 
-            msg = data.get("message", {}) or {}
+            if not isinstance(data, dict) or not isinstance(data.get("message"), dict):
+                raise ModelError("The AI service returned an invalid message.")
+            msg = data["message"]
             tool_calls = msg.get("tool_calls") or []
 
             if not tool_calls:
-                return msg.get("content", "(no response)")
+                content = msg.get("content")
+                if not isinstance(content, str) or not content.strip():
+                    raise ModelError("The AI service returned an empty response.")
+                return content
+
+            allowed_tools = {tool["function"]["name"] for tool in persona.tools}
+            if not isinstance(tool_calls, list):
+                raise ModelError("The AI service returned invalid tool calls.")
 
             # Append the assistant message (with tool_calls) so the model
             # retains its own request when we feed back the tool results.
@@ -108,16 +121,24 @@ async def call_ollama(persona: Persona, history: list[dict]) -> str:
             })
 
             for call in tool_calls:
+                if not isinstance(call, dict) or not isinstance(call.get("function"), dict):
+                    raise ModelError("The AI service returned an invalid tool call.")
                 fn_data = call.get("function", {}) or {}
                 name = fn_data.get("name", "")
                 args_raw = fn_data.get("arguments", {})
-                result = _execute_tool(name, args_raw)
+                if not isinstance(name, str) or name not in allowed_tools:
+                    raise ModelError("The AI service requested a tool outside this persona.")
+                # Guided exercises supply a fixture-only executor; never fall back
+                # to the original lab tools when that executor is provided.
+                executor = tool_executor if tool_executor is not None else _execute_tool
+                result = await asyncio.to_thread(executor, name, args_raw)
                 messages.append({
                     "role": "tool",
+                    "tool_name": name,
                     "content": result,
                 })
 
-    return "[Tool-call loop exceeded; please rephrase your request.]"
+    raise ModelError("The tool-call limit was reached.")
 
 
 async def send_message(
@@ -128,6 +149,9 @@ async def send_message(
         raise ValueError(f"Unknown persona: {persona_slug}")
     save_message(user_id, persona_slug, "user", user_message)
     history = get_history(user_id, persona_slug)
-    bot_response = await call_ollama(persona, history)
+    try:
+        bot_response = await call_ollama(persona, history)
+    except ModelError:
+        return "[The AI service did not return a usable response. Try again in a moment.]"
     save_message(user_id, persona_slug, "assistant", bot_response)
     return bot_response

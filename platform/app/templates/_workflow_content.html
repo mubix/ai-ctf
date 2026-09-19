@@ -1,0 +1,99 @@
+{% set spec = lesson.spec %}
+{% macro event_view(event) %}
+<div class="tool-event">
+  <h4><code>{{ event.tool }}</code> · {% if event.result.error %}Blocked or invalid{% else %}Allowed{% endif %}</h4>
+  <dl><dt>Requested arguments</dt><dd><pre>{{ event.arguments|tojson(indent=2) }}</pre></dd>
+    <dt>Tool result</dt><dd><pre>{{ event.result|tojson(indent=2) }}</pre></dd></dl>
+</div>
+{% endmacro %}
+<div class="lesson-layout" data-run="{{ lesson.run.id }}" data-player="{{ user.id }}"
+     data-running="{{ 'true' if lesson.running else 'false' }}" data-archived="{{ 'true' if lesson.archived else 'false' }}">
+  <aside class="lesson-guide" aria-label="Mission and hints">
+    <h1>{{ spec.title }}</h1>
+    <p class="mission-meta">{{ spec.kind }}</p>
+    <div class="mission-brief">
+      <h2>Your objective</h2><p>{{ spec.objective }}</p>
+      <details class="mission-explainer" open><summary>Task, permissions, and success check</summary>
+        <dl><dt>The assistant's job</dt><dd>{{ spec.job }}</dd>
+          <dt>What you control</dt><dd>{{ spec.control }}</dd>
+          <dt>What counts</dt><dd>{{ spec.check }}</dd></dl>
+      </details>
+    </div>
+    <details class="hint-panel" open><summary>Hints and worked example</summary>
+      <p class="small">Hints do not reduce your progress. These assistants are deliberately weak; model responses can still vary.</p>
+      {% for hint in lesson.hints %}<div class="revealed-hint"><h3>{% if loop.index == 3 %}Worked example{% else %}Hint {{ loop.index }}{% endif %}</h3><p class="payload-example">{{ hint }}</p>
+        {% if loop.index == 3 and not lesson.archived %}<button type="button" class="secondary" data-fill="{{ hint }}" {% if lesson.running %}disabled{% endif %}>Use example in editor</button>{% endif %}
+      </div>{% endfor %}
+      {% if lesson.progress.hint_level < 3 and not lesson.archived %}
+      <form action="{{ lesson.url }}/hint" method="post" data-lesson-action="hint">
+        <input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+        <button type="submit" class="secondary" {% if lesson.running %}disabled{% endif %}>{% if lesson.progress.hint_level == 2 %}Show worked example{% else %}Show next hint{% endif %}</button>
+      </form>{% endif %}
+    </details>
+    <p class="small muted">Inputs and tool records are saved for you and the organizer. Use fictional data. No email is sent and no real employee system is connected.</p>
+    <p><a href="{% if spec.next %}/learn/{{ spec.next }}{% else %}/learn{% endif %}">{{ spec.next_label }}</a></p>
+  </aside>
+  <section class="lesson-workspace" aria-label="Experiment workspace">
+    <div class="workspace-heading"><h2>Edit, run, inspect</h2><span class="status-badge neutral">{{ lesson.turns_left }} runs left</span></div>
+    {% if lesson.archived %}<p class="notice">This is a saved attempt. <a href="{{ lesson.url }}">Return to the current attempt</a>.</p>{% endif %}
+    {% if error %}<div class="notice error" role="alert">{{ error }}</div>{% endif %}
+    {% if lesson.slug == 'knowledge-base' %}
+    <div class="trusted-task"><h3>Trusted task · fixed</h3><p>{{ spec.job }}</p></div>
+    {% endif %}
+    {% if not lesson.archived %}
+    <p>Each run starts with fresh model context. Your earlier experiments stay below for comparison.</p>
+    <button type="button" class="secondary" data-fill="{{ spec.baseline }}" {% if lesson.running %}disabled{% endif %}>{% if lesson.slug == 'knowledge-base' %}Restore original article{% else %}Use a normal request{% endif %}</button>
+    <form class="lesson-composer" action="{{ lesson.url }}/send" method="post" data-lesson-action="send">
+      <input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+      <input type="hidden" name="request_id" value="{{ lesson.request_id }}">
+      <label for="lesson-message">{{ spec.label }}</label>
+      <textarea id="lesson-message" name="message" rows="{{ 9 if lesson.slug == 'knowledge-base' else 4 }}" maxlength="{{ lesson.max_length }}" required aria-describedby="composer-help" {% if lesson.running or not lesson.turns_left %}disabled{% endif %}>{{ draft or (lesson.trials[-1].input if lesson.slug == 'knowledge-base' and lesson.trials else spec.initial) }}</textarea>
+      <div class="composer-footer"><p id="composer-help" class="small muted">{% if lesson.slug == 'knowledge-base' %}Run the unchanged article first, then add your injection. {% endif %}Ctrl+Enter or ⌘+Enter runs. Up to {{ lesson.max_length }} characters.</p>
+        <button type="submit" {% if lesson.running or not lesson.turns_left %}disabled{% endif %}>{{ spec.submit }}</button></div>
+    </form>
+    {% if not lesson.turns_left %}<p class="notice">Start a fresh attempt below to run more experiments.</p>{% endif %}
+    {% if lesson.running %}<a href="{{ lesson.url }}">Refresh run status</a>{% endif %}
+    {% endif %}
+    <div class="lesson-messages experiment-log" role="log" aria-label="Saved experiments" aria-live="polite" tabindex="0">
+    {% for trial in lesson.trials %}
+      <article class="experiment" data-request="{{ trial.request_id }}" data-turn-status="{{ trial.status }}">
+        <h3>Run {{ loop.index }}{% if trial.success %} · Objective reached{% endif %}</h3>
+        <details><summary>Input snapshot for this run</summary><pre>{{ trial.input }}</pre></details>
+        {% if trial.status == 'running' %}<p class="notice">Waiting for the AI service. You can leave and return; this input is saved.</p>
+        {% else %}
+          <p class="turn-feedback">{{ trial.feedback }}</p>
+          <h4>Observed tool calls</h4>
+          {% for event in trial.events %}{{ event_view(event) }}{% else %}<p>No tool calls observed.</p>{% endfor %}
+          {% if trial.response %}<details><summary>Assistant's message about its action</summary><p class="payload-example">{{ trial.response }}</p></details>{% endif %}
+          {% if not lesson.archived %}
+          <div class="experiment-actions">
+            <button type="button" class="secondary" data-fill="{{ trial.input }}" {% if lesson.running %}disabled{% endif %}>Edit this input</button>
+            {% if trial.events %}<form action="{{ lesson.url }}/compare" method="post" data-lesson-action="compare">
+              <input type="hidden" name="run_id" value="{{ lesson.run.id }}"><input type="hidden" name="request_id" value="{{ trial.request_id }}">
+              <button type="submit" class="secondary" {% if lesson.running %}disabled{% endif %}>Compare protected tool</button>
+            </form>{% endif %}
+          </div>{% endif %}
+          {% if trial.success %}<section class="debrief"><h4>What crossed the boundary?</h4><p>{{ spec.debrief }}</p><p>{{ spec.fix }}</p></section>{% endif %}
+          {% if trial.comparison %}
+          <section class="boundary-comparison" data-comparison="{{ trial.request_id }}">
+            <h4>Protected tool comparison</h4>
+            <p>The saved arguments above were replayed through an application permission check. This is a tool-only replay, not another AI response.</p>
+            {% for event in trial.comparison.replay %}{{ event_view(event) }}{% endfor %}
+            <h4>Legitimate-use check</h4><p>A fixed, permitted call must still work through the same boundary.</p>
+            {{ event_view(trial.comparison.benign) }}
+            <p>{% if trial.comparison.checked %}<strong>Boundary checked:</strong> the observed attack is blocked, and the permitted call still works.{% else %}This replay did not include a successful attack. Try reaching the objective, then compare that run.{% endif %}</p>
+            <p class="small">This checks these arguments only. It does not prove every attack is blocked or that the assistant always completes the legitimate task.</p>
+          </section>{% endif %}
+        {% endif %}
+      </article>
+    {% else %}<div class="baseline"><h3>First, establish normal behavior</h3><p>Run the normal request or original article. Inspect the tool arguments and result, then change your input.</p></div>{% endfor %}
+    </div>
+    {% if not lesson.archived %}
+    <details class="attempt-controls"><summary>Start fresh or revisit an attempt</summary>
+      <p>Start an empty set of experiments. Earlier inputs, evidence, hints and progress stay saved.</p>
+      <form action="{{ lesson.url }}/reset" method="post" data-lesson-action="reset"><input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+        <button type="submit" class="secondary" {% if lesson.running %}disabled{% endif %}>Start a fresh attempt</button></form>
+      <ol class="attempt-list">{% for attempt in lesson.attempts %}<li>{% if attempt.id == lesson.run.id %}Current attempt{% else %}<a href="{{ lesson.url }}?attempt={{ attempt.id }}">Attempt from {{ attempt.created_at }} UTC</a>{% endif %}</li>{% endfor %}</ol>
+    </details>{% endif %}
+  </section>
+</div>

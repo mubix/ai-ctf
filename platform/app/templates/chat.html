@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block title %}{{ persona.name }} &mdash; Anvil
 Industries AI Console{% endblock %} {% block body %}
 <header class="topbar">
-  <div class="brand">Anvil Industries &mdash; AI Console</div>
+  <a class="brand" href="/learn">Anvil Industries &mdash; All lessons</a>
   <div class="user">
     Signed in as <strong>{{ user.username }}</strong>
     <form method="post" action="/logout" style="display: inline">

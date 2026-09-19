@@ -31,6 +31,7 @@ class Persona:
     tools: list = field(default_factory=list)
     visible: bool = True
     intro_message: str = ""
+    options: dict = field(default_factory=dict)
 
 
 # =============================================================================

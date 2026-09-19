@@ -6,10 +6,12 @@
   <h2>AI Console — Login</h2>
 
   <form method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next|default('/learn') }}">
     <label for="username">Username</label>
     <input
       id="username"
       name="username"
+      autocomplete="username"
       type="text"
       required
       autofocus
@@ -19,6 +21,7 @@
     <input
       id="password"
       name="password"
+      autocomplete="current-password"
       type="password"
       required
       maxlength="64"

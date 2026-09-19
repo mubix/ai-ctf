@@ -3,7 +3,7 @@ endblock %} {% block body %}
 <main class="auth">
   <img src="/static/logo.jpg" alt="Anvil Industries" class="logo" />
   <h1>Anvil Industries</h1>
-  <h2>AI Console — Registration</h2>
+  <h2>Learn prompt injection in a fictional business</h2>
 
   {% if credentials %}
   <div class="credentials">
@@ -17,9 +17,12 @@ endblock %} {% block body %}
       <dt>Password</dt>
       <dd><code>{{ credentials.password }}</code></dd>
     </dl>
-    <a class="button" href="/login">Continue to login &rarr;</a>
+    <p>You are signed in. Keep these credentials so you can return to your progress.</p>
+    <a class="button" href="/learn">Start learning</a>
   </div>
   {% else %}
+  <p>Start with a guided lesson, get hints when you need them, and see why an attack worked.</p>
+  <p class="small">Use fictional data. Your messages and progress are saved and can be read by the organizer.</p>
   <form method="post" action="/register">
     <label for="username"
       >Pick a username (1&ndash;32 chars; letters, digits, _ or -)</label
@@ -33,7 +36,7 @@ endblock %} {% block body %}
       maxlength="32"
       pattern="[A-Za-z0-9_\-]+"
     />
-    <button type="submit">Register</button>
+    <button type="submit">Create learning account</button>
   </form>
   <p>Already registered? <a href="/login">Log in</a>.</p>
   {% endif %} {% if error %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson_title|default('Your first prompt injection') }} — Anvil Industries{% endblock %}
+{% block body %}
+{% include "_learning_header.html" %}
+<div class="lesson-shell">
+  <nav class="breadcrumb" aria-label="Learning navigation"><a href="/learn">All lessons</a><span>{{ lesson_title|default('Your first prompt injection') }}</span></nav>
+  <div id="connection-error" class="notice error" role="alert" hidden></div>
+  <p id="sign-in-again" hidden><a href="/login?next={{ lesson_url|default('/learn/first-injection') }}">Sign in to resume this lesson</a></p>
+  <div id="request-status" class="request-status" role="status" aria-live="polite"></div>
+  <noscript>
+    <style>button[data-fill] { display: none; }</style>
+    <p class="notice">You can send messages and use hints without JavaScript. Copy examples into the composer manually.
+      Automatic status refresh and unsent draft recovery require JavaScript.</p>
+  </noscript>
+  <main id="lesson-content">{% include lesson_partial|default('_lesson_content.html') %}</main>
+</div>
+<script src="/static/learning.js" defer></script>
+{% endblock %}

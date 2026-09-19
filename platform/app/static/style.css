@@ -261,3 +261,152 @@ main.chat #composer button:disabled {
   opacity: 0.6;
   cursor: wait;
 }
+
+/* Guided learning: a mission brief beside a working conversation. */
+:root { --success: #8ce0be; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+button, textarea, input { font: inherit; }
+button, .button { touch-action: manipulation; }
+.button, .lesson-shell button {
+  display: inline-block;
+  background: var(--accent);
+  color: #191b20;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover, .lesson-shell button:hover { filter: brightness(1.08); }
+.lesson-shell button.secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: #596170;
+  font-weight: 500;
+}
+.lesson-shell button:disabled { opacity: .5; cursor: wait; }
+.topbar .brand { color: var(--text); }
+.topbar .brand span { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 10px; }
+.topbar .user { display: flex; align-items: center; gap: 12px; }
+.topbar .user form { margin: 0; }
+.small, .mission-meta { font-size: 13px; }
+.muted, .mission-meta { color: #adb6c4; }
+.learning-home { width: min(100% - 40px, 960px); margin: 48px auto 64px; }
+.welcome { max-width: 780px; }
+.welcome h1 { font-size: clamp(28px, 4vw, 42px); line-height: 1.18; font-weight: 650; margin: 0 0 20px; letter-spacing: -.025em; }
+.welcome .lead { font-size: 19px; color: #c4ccd8; max-width: 62ch; }
+details summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+details p { max-width: 72ch; }
+.introduction { margin: 24px 0 32px; }
+.example-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.example-pair > div { border-left: 2px solid #596170; padding-left: 16px; }
+.example-pair h2 { font-size: 16px; }
+.mission-entry { display: grid; grid-template-columns: 50px 1fr; gap: 24px; padding: 30px 0; border-top: 1px solid #596170; border-bottom: 1px solid var(--border); }
+.mission-entry h2 { font-size: 24px; line-height: 1.3; margin: 8px 0 12px; }
+.mission-entry p { max-width: 68ch; }
+.mission-number { color: var(--accent); font-size: 36px; line-height: 1.2; padding-top: 8px; }
+.mission-meta { margin: 0; }
+.progress-label { color: var(--success); font-size: 14px; font-weight: 600; }
+.practice-entry { max-width: 76ch; padding: 22px 0; }
+.practice-entry h2 { font-size: 20px; }
+.lab-notice { border-top: 1px solid var(--border); padding-top: 16px; color: #adb6c4; font-size: 13px; max-width: 90ch; }
+.lab-notice p { max-width: 80ch; }
+.lesson-shell { width: min(100% - 40px, 1240px); margin: 0 auto 48px; }
+.breadcrumb { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 20px 0 8px; font-size: 14px; }
+.breadcrumb span { color: #adb6c4; }
+.request-status { min-height: 30px; padding: 2px 0 8px; font-size: 14px; color: #c4ccd8; }
+.lesson-layout { display: grid; grid-template-columns: minmax(240px, 310px) minmax(0, 1fr); gap: 40px; align-items: start; }
+.lesson-guide h1 { font-size: 29px; letter-spacing: -.015em; line-height: 1.2; margin: 0 0 10px; }
+.lesson-guide h2 { font-size: 18px; margin: 24px 0 10px; }
+.lesson-guide h3 { font-size: 14px; margin-bottom: 6px; }
+.lesson-guide p { margin: 10px 0; }
+.mission-brief dl, .debrief dl { margin: 16px 0; }
+.mission-brief dt, .debrief dt { font-weight: 650; font-size: 14px; margin-top: 14px; }
+.mission-brief dd, .debrief dd { margin: 4px 0 0; color: #c4ccd8; }
+.hint-panel { padding: 0 0 20px; margin-top: 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.hint-panel > summary { font-size: 18px; padding-top: 18px; }
+.mission-explainer > summary { font-size: 13px; color: #c4ccd8; }
+.revealed-hint { padding: 4px 0 14px; }
+.payload-example { background: var(--panel-2); padding: 14px; border-radius: 4px; overflow-wrap: anywhere; }
+.workspace-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.workspace-heading h2 { font-size: 19px; margin: 0; }
+.status-badge { color: var(--success); border: 1px solid #355948; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+.status-badge.neutral { color: #c4ccd8; border-color: #596170; }
+.baseline { background: var(--panel); padding: 18px 20px; border-left: 3px solid var(--accent); margin-bottom: 18px; }
+.baseline h3 { margin: 0; font-size: 16px; }
+.baseline p { color: #c4ccd8; max-width: 64ch; }
+.lesson-messages { max-height: 52vh; min-height: 140px; overflow-y: auto; overscroll-behavior: contain; padding: 6px 12px 6px 0; }
+.lesson-message { padding: 14px 18px; margin: 0 0 12px; background: var(--bot); border-radius: 6px; }
+.lesson-message.player { background: var(--user); margin-left: 28px; }
+.lesson-message.assistant { margin-right: 28px; }
+.lesson-message h3 { margin: 0 0 7px; font-size: 12px; color: #c4ccd8; }
+.lesson-message p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.turn-feedback { font-size: 13px; color: #c4ccd8; margin: 0 0 20px; padding: 0 18px; }
+.lesson-composer { margin-top: 20px; }
+.lesson-composer label { display: block; font-weight: 600; margin-bottom: 8px; }
+.lesson-composer textarea { width: 100%; display: block; padding: 12px; background: var(--panel); color: var(--text); border: 1px solid #596170; border-radius: 6px; min-height: 110px; resize: vertical; }
+.composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.composer-footer p { max-width: 42ch; margin: 0; }
+.composer-footer button { flex-shrink: 0; }
+.notice { padding: 12px 16px; background: var(--panel-2); border-left: 3px solid #8b9db6; margin: 12px 0; overflow-wrap: anywhere; }
+.notice p:first-child { margin-top: 0; }
+.notice.error { border-color: var(--error); color: #ffc2c2; }
+.debrief { background: #172b27; border-left: 3px solid var(--success); padding: 20px 24px; margin-top: 28px; }
+.debrief h2 { font-size: 22px; margin: 0 0 12px; }
+.debrief p { max-width: 66ch; }
+.attempt-controls { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 10px; }
+.attempt-controls p { color: #c4ccd8; }
+.attempt-list { padding-left: 20px; }
+.attempt-list li { padding: 6px 0; }
+.refresh-link { display: inline-block; margin-top: 14px; }
+@media (max-width: 820px) {
+  .lesson-layout { grid-template-columns: 1fr; gap: 26px; }
+  .lesson-guide { max-width: 72ch; }
+  .lesson-guide h1 { font-size: 28px; }
+  .mission-brief dl { display: grid; grid-template-columns: 140px 1fr; gap: 10px 14px; }
+  .mission-brief dt, .mission-brief dd { margin: 0; }
+  .lesson-messages { max-height: 58vh; }
+  .hint-panel { margin-top: 18px; }
+}
+@media (max-width: 480px) {
+  header.topbar { padding: 12px 16px; gap: 16px; align-items: start; }
+  .topbar .brand span { display: block; margin: 2px 0 0; }
+  .topbar .user { flex-wrap: wrap; gap: 4px 8px; justify-content: end; }
+  .learning-home { margin-top: 30px; width: calc(100% - 32px); }
+  .lesson-shell { width: calc(100% - 32px); }
+  .mission-entry { grid-template-columns: 1fr; gap: 8px; }
+  .mission-number { display: none; }
+  .example-pair { grid-template-columns: 1fr; gap: 12px; }
+  .mission-brief dl { display: block; }
+  .mission-brief dt { margin-top: 12px; }
+  .mission-brief dd { margin-top: 4px; }
+  .composer-footer { flex-direction: column; align-items: stretch; }
+  .lesson-message.player { margin-left: 12px; }
+  .lesson-message.assistant { margin-right: 12px; }
+  .lesson-message { padding: 12px; }
+  .debrief { padding: 18px; }
+  main.auth { width: calc(100% - 32px); margin: 24px auto; padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
+
+/* Guided workflows: distinguish trusted task, editable source and observed effects. */
+.trusted-task { border-left: 4px solid #8ce0be; padding: .5rem 1rem; background: #181a20; margin-bottom: 1rem; }
+.trusted-task p { max-width: 75ch; }
+.experiment-log { max-height: 70vh; margin-top: 1.5rem; }
+.experiment { padding: 1rem; border-bottom: 2px solid #343844; }
+.experiment h3 { margin-top: 0; }
+.experiment h3, .boundary-comparison > h4:first-child { scroll-margin-top: 12px; }
+.experiment pre, .tool-event pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; max-width: 100%; margin: .5rem 0; }
+.tool-event { border-left: 3px solid #79879a; padding-left: 1rem; margin: 1rem 0; }
+.tool-event dd { margin-left: 0; }
+.tool-event dt { color: #bbc3d1; font-size: .9rem; }
+.experiment-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+.experiment-actions form { margin: 0; }
+.boundary-comparison { border: 1px solid #8ce0be; padding: 1rem; margin-top: 1rem; }
+.boundary-comparison:focus { outline: 2px solid #ff8a3d; outline-offset: 3px; }
+@media (max-width: 820px) { .experiment { padding: .75rem; } .experiment-log { max-height: none; } }
