@@ -1,6 +1,7 @@
 # ---------------------------------------------------------------------------
-# Generation / AI-tooling artifacts — do not publish
+# Local tools and working files
 # ---------------------------------------------------------------------------
+.local/
 CLAUDE.md
 .claude/
 .codex/

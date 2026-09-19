@@ -1,18 +1,15 @@
 # ai-ctf
 
-A self-contained, four-hour **AI Capture-the-Flag** for mixed-skill security
-practitioners. Players talk to six AI personas (one hidden) that protect
+A local **AI Capture-the-Flag** with three guided lessons for technologists
+new to prompt injection. Players can also explore six AI personas (one hidden) that protect
 20 flags via prompt-injection, tool-call abuse, business-logic manipulation,
 supply-chain fingerprinting, web recon, and OSINT.
 
-Originally built to be run on a single Mini-PC at an in-person event — no GPU,
-no internet, no admin UI. Players use sticky notes; flags are scored on a
-whiteboard. The platform itself is small enough that you can stand it up on a
-laptop in 30 minutes.
-
-This code was largely AI-generated. The point is not to read the source for
-craftsmanship lessons — it's to run the event and learn the attack
-techniques first-hand. Bring your own opinions to the prompt design.
+The guided path covers direct injection, tool authorization, and injection through an
+editable knowledge article. It provides hints, saved attempts, tool evidence, completion
+feedback, and protected tool comparisons. The original practice labs retain manual
+event scoring. Model inference runs locally through Ollama; after the build and
+model download, the core platform needs no internet connection.
 
 ---
 
@@ -41,27 +38,29 @@ ai-ctf/
 └── docs/                      ← run-the-event paperwork
     ├── ANSWER_KEY.md          ← print this; verify sticky notes against it
     ├── CHEAT_SHEET.md         ← working solutions + tiered hints (GM only)
+    ├── OPERATIONS.md          ← updates, backups, and troubleshooting
     ├── SETUP_RUNBOOK.md       ← week-of, step-by-step
     └── EVENT_DAY_NOTES.md     ← briefing script + troubleshooting
 ```
 
-The four docs under `docs/` are the most useful files in this repo. Read them
-in the order above before running the event.
+Use the quick start below for the guided path. The [operations guide](docs/OPERATIONS.md)
+covers updates, backups, recovery, and pre-event checks.
+The answer key, cheat sheet, setup runbook, and event notes describe the optional original CTF format.
 
 ---
 
 ## Requirements
 
 - Docker + Docker Compose (Compose v2).
-- ~32 GB RAM on the host machine (the default Qwen 2.5 7B Q4 model loads to
-  ~6 GB; the rest is headroom for concurrent inference under a 20-player load).
-  An 8 GB RAM laptop running a single tester also works fine.
+- Enough RAM for the configured model, application, operating system, and other workloads.
+  The default model download is about 4.7 GB; that is not its total runtime memory requirement.
+  Capacity depends on the hardware and model; check with the intended number of players before an event.
 - Python 3.11+ on the host (only used for the `apply_flags.py` and
   `dump_chats.py` helper scripts — the app itself runs inside Docker).
 - `exiftool` (only needed if you change the EXIF flag and want
   `apply_flags.py` to re-stamp the logo).
 - Internet access during build (for `pip install` and the Ollama model pull).
-  After that the stack runs fully offline.
+  After that the core local stack runs offline. The optional external OSINT chain needs internet access.
 
 ---
 
@@ -84,11 +83,48 @@ docker compose exec ollama ollama pull qwen2.5:7b-instruct-q4_K_M
 docker compose up -d
 
 # 4. Open the platform
-open http://localhost:8000/    # or your-machine-ip:8000 on another laptop
+open http://localhost:18080/    # or your-machine-ip:18080 on another laptop
 ```
 
 Register a username; the platform generates a 12-character password and shows
-it once. Log in and start playing.
+it once. Save it for later. You are signed in automatically and can select
+**Start learning**. Returning players can log in to resume saved progress.
+
+The Compose project is named `ai-ctf` and has its own network and model volume.
+Only the web UI publishes a host port: `18080` by default. Set `CTF_WEB_PORT`
+in `platform/.env` to choose another port. Ollama and the decoy have no published
+host ports; the app connects to its own Ollama container. No GPU passthrough is
+configured. CPU and memory are still shared with other workloads on the host.
+
+If upgrading a stack created under a different Compose project name, keep that
+name with `docker compose -p YOUR_EXISTING_PROJECT ...` to reuse its containers
+and model volume. Changing project names creates a separate stack.
+
+The guided Customer Service lesson uses a fresh audit token per attempt rather
+than the fixed event token. It recognizes plain-text disclosures and distinguishes
+viewing the worked example from solving without it. Fresh attempts preserve
+previous conversations and earned progress. Its beginner profile deliberately trusts a
+claimed support-operator role; the original Customer Service practice bot stays separate.
+Existing guided attempts retain their earlier profile until the player starts fresh.
+
+Two more guided lessons use isolated fictional fixtures: HR tool access, then an editable
+knowledge article that can redirect a simulated reply. They execute schema-validated model action requests against those fixture tools,
+record the tool calls, and validate their results. Players can replay the same arguments through a permission check
+and inspect a legitimate-use control. This comparison checks the tool boundary, not a
+second model run. Nothing is emailed and no real HR service is connected. The original
+personas remain self-directed practice labs with their original answers and manual scoring.
+
+For an existing installation, application/template changes require rebuilding
+the web image; restarting alone does not copy updated code:
+
+```bash
+cd platform
+docker compose up -d --build web
+```
+
+Lesson tables are created on startup without deleting existing accounts or chat history.
+Follow the [operations guide](docs/OPERATIONS.md) to back up an existing installation
+before updating and check that players can resume their lessons afterward.
 
 The platform self-contains 16 of the 20 flags. The remaining 4 (#14–17) require
 external infrastructure that you push yourself — see
@@ -107,8 +143,8 @@ After editing:
 
 ```bash
 cd platform
-python scripts/apply_flags.py    # stamps values into static files
-docker compose restart web decoy # picks up the new TOML
+python3 scripts/apply_flags.py        # stamps values into static files
+docker compose up -d --build web decoy # copies updated assets into the images
 ```
 
 `apply_flags.py` updates the files that aren't loaded by Python at runtime:
@@ -122,6 +158,10 @@ docker compose restart web decoy # picks up the new TOML
 After changing any flag values, **also update `docs/ANSWER_KEY.md`** so your
 verifier sheet matches.
 
+Rebuilding does not update employee rows already in the SQLite database: the seed uses
+`INSERT OR IGNORE`. Changing the CEO salary in an existing event still requires a targeted
+fixture migration. Do not delete the player database to apply that change.
+
 If you want to add or remove flags entirely (change which personas exist, drop
 the external chain, add a new tool), edit `platform/app/personas/__init__.py`
 and `platform/app/tools.py` directly. There's no DSL — the personas ARE the
@@ -134,12 +174,10 @@ game.
 - **Loosen the persona prompts** (`platform/app/personas/__init__.py`) — fewer
   guardrail clauses, fewer "NEVER" lines, fewer explicit refusal examples.
   Players' first-attempt success rate goes up.
-- **Swap to a smaller model** — `qwen2.5:3b-instruct-q4_K_M` jailbreaks more
-  easily. Edit `OLLAMA_MODEL` in `docker-compose.yml`, pull the new model,
-  restart `web`.
-- **Swap to a stronger model** — pick a larger Qwen / Llama / Mistral build
-  if your hardware can run it. Tool-calling support varies by model; the chat
-  loop is in `platform/app/chat.py`.
+- **Change the model** — edit `OLLAMA_MODEL` in `docker-compose.yml`, pull that model,
+  and run `docker compose up -d web` to apply the configuration. Model size alone does
+  not establish difficulty. Recheck normal tasks, worked examples, native tool calls,
+  and structured action responses using the [pre-event checks](docs/OPERATIONS.md#pre-event-checks).
 
 ---
 
@@ -161,8 +199,7 @@ game.
   GitHub repo, dig through commit history, follow links to a public Gist,
   query DNS.
 
-The full attack catalog with working prompts (verified against Qwen 2.5 7B) is
-in `docs/CHEAT_SHEET.md`.
+The original attack catalog and historical example prompts are in `docs/CHEAT_SHEET.md`.
 
 ---
 
@@ -174,7 +211,14 @@ the tiered hint catalog, and a troubleshooting table.
 
 For event-day forensics — "who actually solved what?" — run
 `platform/scripts/dump_chats.py` against the bind-mounted SQLite DB to produce
-a self-contained HTML report with per-message flag-detection chips.
+a self-contained HTML report with per-message flag-detection chips. These are substring
+matches, not proof that an assistant disclosed a secret or executed a tool. The guided
+lessons keep their own validated completion records.
+
+The default `ctf_log.html` export, runtime data, local environment files, and release
+archives are ignored by Git. Keep custom-named exports and deployment backups outside
+the checkout or in the ignored `platform/data/` directory. Player records, credentials,
+and chat exports should stay private.
 
 ---
 
@@ -186,7 +230,5 @@ MIT. See `LICENSE`.
 
 ## Acknowledgments
 
-Built for [Rob Fuller (mubix)](https://github.com/mubix)'s in-house team CTF
-night, then opened up because the rest of the security community might find it
-useful too. Code largely AI-generated; design decisions and content owned by a
-human.
+Created by [Rob Fuller (mubix)](https://github.com/mubix) for hands-on AI security
+training. Code largely AI-generated; design decisions and content owned by a human.

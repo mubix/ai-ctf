@@ -1,5 +1,9 @@
 # Event Day Notes — Run of Show
 
+These notes describe the original manually scored CTF format. For beginners, start at
+`/learn` and use the guided lesson, where hints are available immediately without penalty.
+Guided completion is saved separately from the fixed flags and whiteboard scores below.
+
 ## Pre-event: Player briefing (~5 minutes)
 
 Suggested script (paraphrase to taste):
@@ -24,7 +28,7 @@ Suggested script (paraphrase to taste):
 > - If you forget your password, just re-register with a new username. No reset.
 > - If something looks broken, tell me — don't try to debug it yourself.
 >
-> The platform IP is on the whiteboard: `http://<CTF_IP>:8000/`. Go register and start. Four hours starts now."
+> The platform IP is on the whiteboard: `http://<CTF_IP>:18080/`. Go register and start. Four hours starts now."
 
 ---
 
@@ -43,7 +47,8 @@ Update the running total column after each verification. Use a thick marker so i
 
 ### When to give hints
 
-Default to **no hints**. Players learn more from struggling. Give a hint only when:
+For an optional competitive session, agree on hint timing before play. For guided learning,
+offer hints whenever players need them. In competitive mode, useful moments for a nudge include:
 
 - A player is visibly frustrated and hasn't found a flag in 30+ minutes
 - Multiple players are stuck on the same flag (broadcast a room-wide nudge)

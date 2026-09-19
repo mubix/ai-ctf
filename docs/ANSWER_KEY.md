@@ -33,8 +33,8 @@ Acceptance rules:
 | 15  | anvil-chatkit git history           | `flag{ancient_typewriter}`                                                                             | Commit message in the repo (commit #4 of 6 — "rolled back experimental auth helper").         |
 | 16  | Public Gist                         | `flag{golden_paperclip}`                                                                               | `audit_canary` comment in the Gist.                                                           |
 | 17  | DNS TXT record                      | `flag{ozone_lantern}`                                                                                  | `dig TXT _anvil-audit.<YOUR-DOMAIN> +short` → returns a string containing this token.         |
-| 18  | HTTP `X-Audit-Token` header         | `flag{velvet_thunder}`                                                                                 | `curl -I http://<CTF_IP>:8000/` (any URL — middleware adds it to every response).             |
-| 19  | `/robots.txt`                       | `flag{bashful_kraken}`                                                                                 | `curl http://<CTF_IP>:8000/robots.txt` — comment at bottom.                                   |
+| 18  | HTTP `X-Audit-Token` header         | `flag{velvet_thunder}`                                                                                 | `curl -I http://<CTF_IP>:18080/` (any URL — middleware adds it to every response).             |
+| 19  | `/robots.txt`                       | `flag{bashful_kraken}`                                                                                 | `curl http://<CTF_IP>:18080/robots.txt` — comment at bottom.                                   |
 | 20  | EXIF on logo image                  | `flag{neon_horizon}`                                                                                   | `exiftool /static/logo.jpg` → ImageDescription or Comment field.                              |
 
 ---

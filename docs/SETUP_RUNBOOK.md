@@ -1,7 +1,6 @@
 # Setup Runbook — Week-Of Checklist
 
-Pick your own dates; the original event used a Mini-PC delivered to the venue
-the day before. A reasonable timeline working backward from event day (T-0):
+Pick your own dates. A possible timeline working backward from event day (T-0):
 
 - **T-5 to T-3 (weekend before):** Build the Docker stack and pull the model
   on the host that will run the platform.
@@ -15,7 +14,7 @@ the day before. A reasonable timeline working backward from event day (T-0):
 ## T-5 to T-3: Build the Docker images on the host
 
 Do this **while the host still has internet** (the build pulls Python deps,
-htmx, Ollama base image). After step 4 you can pull the network cable.
+htmx, Ollama base image). Complete the model download and smoke checks before disconnecting.
 
 ```bash
 # 1. Get the project onto the host
@@ -45,10 +44,10 @@ docker compose exec ollama ollama list   # confirm model is present
 docker compose up -d
 
 # 7. Smoke test
-curl -I http://localhost:8000/
+curl -sS -D - -o /dev/null http://localhost:18080/
 # should return 200 OK with X-Powered-By: anvil-chatkit/0.3.1 and an X-Audit-Token header
 
-curl http://localhost:8000/robots.txt
+curl http://localhost:18080/robots.txt
 # should include the recon token in the trailing comment
 ```
 
@@ -97,13 +96,13 @@ the internet — players use their own devices for that.
 CTF=<the-ip-from-ip-addr>
 
 # Web up
-curl -I http://$CTF:8000/
+curl -sS -D - -o /dev/null http://$CTF:18080/
 
 # Robots flag
-curl -s http://$CTF:8000/robots.txt | grep flag
+curl -s http://$CTF:18080/robots.txt | grep flag
 
 # Logo + EXIF flag
-curl -s http://$CTF:8000/static/logo.jpg -o /tmp/logo.jpg
+curl -s http://$CTF:18080/static/logo.jpg -o /tmp/logo.jpg
 exiftool /tmp/logo.jpg | grep -i flag
 ```
 
@@ -117,9 +116,9 @@ For each of the 20 flags, take the role of a player and confirm you can retrieve
 Common dry-run gotchas:
 
 - **Ollama hasn't pulled the model** — `docker compose exec ollama ollama list`. Pull again if missing.
-- **Tool-call loop hangs** — check `docker compose logs web` for tool errors. The chat module's `MAX_TOOL_ITERATIONS=6` is a safety cap; messages get returned with "Tool-call loop exceeded" if hit.
+- **Tool-call loop fails** — check `docker compose logs web`. The original chat loop caps tool rounds at six and returns a service-error message when it cannot finish. Guided lessons retain the input for recovery.
 - **DB locked** — restart the web container only: `docker compose restart web`.
-- **Player can't reach the box** — confirm same LAN, no wifi isolation, port 8000 not blocked.
+- **Player can't reach the box** — confirm same LAN, no wifi isolation, port 18080 not blocked.
 
 ---
 
