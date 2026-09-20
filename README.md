@@ -1,6 +1,6 @@
 # ai-ctf
 
-A local **AI Capture-the-Flag** with three guided lessons for technologists
+A local **AI Capture-the-Flag** with guided lessons for technologists
 new to prompt injection. Players can also explore six AI personas (one hidden) that protect
 20 flags via prompt-injection, tool-call abuse, business-logic manipulation,
 supply-chain fingerprinting, web recon, and OSINT.
@@ -10,6 +10,12 @@ editable knowledge article. It provides hints, saved attempts, tool evidence, co
 feedback, and protected tool comparisons. The original practice labs retain manual
 event scoring. Model inference runs locally through Ollama; after the build and
 model download, the core platform needs no internet connection.
+
+**Email Joe in Product Sales** adds a simulated inbox and Windows-style desktop.
+Write an email that Joe's assistant will read, then watch the actual model summary
+and recorded actions. Three objectives cover a misleading sales brief, disclosure
+of a fictional internal file, and an unauthorized discount. No mail server, Windows,
+Wine, or additional model is required.
 
 ---
 
@@ -36,7 +42,7 @@ ai-ctf/
 │   ├── gist_content.md        ← paste this into a public Gist
 │   └── dns_records.txt        ← TXT record to add to your domain
 └── docs/                      ← run-the-event paperwork
-    ├── ANSWER_KEY.md          ← print this; verify sticky notes against it
+    ├── ANSWER_KEY.md          ← guided solutions + original 20-flag answers
     ├── CHEAT_SHEET.md         ← working solutions + tiered hints (GM only)
     ├── OPERATIONS.md          ← updates, backups, and troubleshooting
     ├── SETUP_RUNBOOK.md       ← week-of, step-by-step
@@ -113,6 +119,15 @@ record the tool calls, and validate their results. Players can replay the same a
 and inspect a legitimate-use control. This comparison checks the tool boundary, not a
 second model run. Nothing is emailed and no real HR service is connected. The original
 personas remain self-directed practice labs with their original answers and manual scoring.
+
+The email scenario is available from **All lessons → Email Joe**. Its File Explorer
+uses familiar paths such as `C:\Users\Joe\Documents\Sales`; these identify in-memory
+fixtures and never access the host filesystem. Each email gets fresh fictional files,
+an outbox, and a sales record. Story events are labeled separately from observed model
+and tool activity. File-disclosure and record-change objectives require executed actions,
+not a claim in the summary. Enable **Enforce Joe's tool permissions** to rerun either
+tool objective with application checks, then send a clean example to check normal use.
+Attempts, hints, worked-example use, and progress are saved.
 
 For an existing installation, application/template changes require rebuilding
 the web image; restarting alone does not copy updated code:

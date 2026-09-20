@@ -1,0 +1,62 @@
+{% set trial = lesson.latest %}
+<div class="email-activity">
+  <h2>Meanwhile, at Joe's desk</h2>
+  <p class="small muted">Story events set the scene. Model and tool events come from this run.</p>
+  <ol class="email-timeline" aria-label="Activity timeline">
+    {% if trial %}{% for event in trial.events %}
+    <li class="event-{{ event.kind }}"><span class="event-kind">{{ 'Story' if event.kind == 'story' else 'Model' if event.kind in ('model', 'summary') else 'Tool' }}</span> {{ event.text }}</li>
+    {% endfor %}
+    {% if trial.status == 'failed' %}<li class="event-failure">Processing stopped. Your email and observed actions are saved.</li>{% endif %}
+    {% else %}<li>Joe is waiting for your email. Start with the clean example to see his normal workflow.</li>{% endif %}
+  </ol>
+  {% if lesson.running %}<p class="email-running" role="status">Joe's assistant is processing. Your email is saved; you can return to this attempt.</p>{% endif %}
+</div>
+<div class="joe-window">
+  <div class="joe-titlebar"><span class="joe-avatar" aria-hidden="true">J</span><strong>Joe · Product Sales</strong><span class="joe-window-label">Simulated laptop</span></div>
+  <div class="joe-tabs" aria-label="Joe's desktop views">
+    <button type="button" data-desk-tab="summary" aria-pressed="true">Sales Desk</button>
+    <button type="button" data-desk-tab="files" aria-pressed="false">File Explorer</button>
+    <button type="button" data-desk-tab="outbox" aria-pressed="false">Outbox{% if trial %} ({{ trial.workspace.outbox|length }}){% endif %}</button>
+    <button type="button" data-desk-tab="deal" aria-pressed="false">Sales record</button>
+  </div>
+  <section class="joe-pane" data-desk-pane="summary">
+    <h3 tabindex="-1" id="joe-summary-heading">Joe's email briefing</h3>
+    {% if trial and trial.result %}
+    <p class="joe-result-label">Actual model response{% if trial.protected %} · Tool permissions enforced{% endif %}</p>
+    <p class="joe-summary">{{ trial.result.summary }}</p>
+    <dl class="joe-facts"><dt>Assistant's reported deal status</dt><dd>{{ trial.result.deal_status }}</dd><dt>Trusted starting record</dt><dd>Pending · 0% discount</dd></dl>
+    {% elif lesson.running %}<p>The local model is preparing Joe's briefing. The summary will appear here when it finishes.</p>
+    {% elif trial %}<p>No completed summary is available. Check the activity and any recorded actions below.</p>
+    {% else %}<p class="joe-empty">“Summarize my sales emails.”</p><p>Joe's assistant will read your message and produce a real summary here.</p>{% endif %}
+  </section>
+  <section class="joe-pane" data-desk-pane="files">
+    <h3>File Explorer</h3><p class="joe-address">This PC › Local Disk (C:) › Users › Joe › Documents › Sales</p>
+    <p class="small">These Windows paths identify fictional files. Only Joe's assistant can read their contents during a run.</p>
+    <ul class="joe-files">{% for path in lesson.files %}<li><span aria-hidden="true">▤</span><div><strong>{{ path.split('\\')[-1] }}</strong><code>{{ path }}</code></div></li>{% endfor %}</ul>
+    <p class="small">File Explorer shows the available attack surface. Recorded file reads appear in the evidence below.</p>
+  </section>
+  <section class="joe-pane" data-desk-pane="outbox">
+    <h3>Simulated outbox</h3><p class="small">No real email is sent. These entries come from accepted send_email actions.</p>
+    {% if trial and trial.workspace.outbox %}{% for mail in trial.workspace.outbox %}<article class="joe-mail"><h4>To: {{ mail.recipient }}</h4><p>{{ mail.body }}</p></article>{% endfor %}
+    {% else %}<p>No outgoing messages.</p>{% endif %}
+  </section>
+  <section class="joe-pane" data-desk-pane="deal">
+    <h3>Northstar opportunity</h3>
+    {% set record = trial.workspace.record if trial else {'status': 'pending', 'discount_percent': 0, 'note': 'Awaiting customer review.'} %}
+    <dl class="joe-facts"><dt>Status</dt><dd>{{ record.status }}</dd><dt>Discount</dt><dd>{{ record.discount_percent }}%</dd><dt>Follow-up note</dt><dd>{{ record.note }}</dd></dl>
+    <p class="small">Starting values: pending, 0% discount. Only an accepted sales tool action changes this record.</p>
+  </section>
+</div>
+{% if trial %}
+<div class="email-verdict {% if trial.success %}email-success{% endif %}" data-result-status="{{ trial.status }}">
+  <h3 tabindex="-1" id="email-verdict-heading">{% if trial.success %}Objective reached{% elif trial.status == 'running' %}Watching Joe's assistant{% elif trial.status == 'failed' %}Run interrupted{% elif trial.protected %}Protected run result{% else %}Review this run{% endif %}</h3>
+  <p>{{ trial.feedback or 'Waiting for observed results. The activity above updates as the assistant works.' }}</p>
+  {% if trial.success %}<p>{{ lesson.spec.debrief }}</p><p><strong>What would protect Joe?</strong> {{ lesson.spec.mitigation }}</p>{% endif %}
+  {% if trial.status != 'running' and not lesson.archived %}<button type="button" class="secondary" data-email-fill data-subject="{{ trial.subject }}" data-body="{{ trial.body }}" data-protected="{{ 'true' if trial.protected else 'false' }}">Send again / revise</button>{% endif %}
+  {% if not lesson.archived %}<p class="small"><a href="#email-body">Back to your email</a></p>{% endif %}
+</div>
+<details class="email-evidence"><summary>Inspect observed tool calls</summary>
+  {% for event in trial.events if event.kind == 'tool' %}<article class="tool-event"><h4>{{ event.text }}</h4><dl><dt>Requested arguments</dt><dd><pre>{{ event.arguments|tojson(indent=2) }}</pre></dd><dt>Recorded result</dt><dd><pre>{{ event.result|tojson(indent=2) }}</pre></dd></dl></article>
+  {% else %}<p>No tool calls were recorded. A claim in the summary is not evidence that a tool ran.</p>{% endfor %}
+</details>
+{% endif %}

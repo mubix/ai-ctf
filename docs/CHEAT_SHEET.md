@@ -2,6 +2,10 @@
 
 **Game-master eyes only. Don't print and leave on a table.**
 
+For the guided lessons and all three **Email Joe** objectives, use the
+[guided learning answer key](ANSWER_KEY.md#guided-learning-at-a-glance).
+This cheat sheet covers the original 20-flag practice labs.
+
 Paths in this doc assume the default `platform/flags.toml` (`github_org =
 "anvil-industries"`, etc.). If you've customized the config, substitute your
 own org, domain, and tokens where you see the defaults.

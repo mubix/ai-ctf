@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Red
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import learning, workflows
+from . import learning, workflows, email_lab
 from .auth import (
     COOKIE_NAME,
     authenticate,
@@ -152,7 +152,9 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
 
 
 def _login_destination(destination):
-    allowed = {"/learn", "/learn/first-injection", *("/learn/" + slug for slug in workflows.LESSONS)}
+    allowed = {"/learn", "/learn/first-injection", "/learn/email-joe",
+               *("/learn/email-joe?goal=" + goal for goal in email_lab.GOALS),
+               *("/learn/" + slug for slug in workflows.LESSONS)}
     return destination if destination in allowed else "/learn"
 
 
@@ -164,6 +166,7 @@ def learn_home(request: Request):
     return templates.TemplateResponse(request, "learn.html", {
         "user": user, "progress": learning.progress_for(user["id"]),
         "workflows": workflows.LESSONS, "workflow_progress": workflows.progress_for(user["id"]),
+        "email_progress": email_lab.progress_for(user["id"]),
     }, headers={"Cache-Control": "no-store"})
 
 
@@ -227,6 +230,57 @@ def _workflow_response(request, user, slug, *, run_id=None, error=None, status_c
         return JSONResponse({"html": templates.get_template("_workflow_content.html").render(context), "error": error},
                             status_code=status_code, headers=headers)
     return templates.TemplateResponse(request, "lesson.html", context, status_code=status_code, headers=headers)
+
+
+def _email_response(request, user, goal, *, run_id=None, error=None, status_code=200, draft=None):
+    state = email_lab.state(user["id"], goal, run_id)
+    context = {"request": request, "user": user, "lesson": state, "goals": email_lab.GOALS,
+               "goal_progress": email_lab.progress_for(user["id"]), "error": error, "draft": draft}
+    headers = {"Cache-Control": "no-store"}
+    if "application/json" in request.headers.get("accept", ""):
+        return JSONResponse({"html": templates.get_template("_email_content.html").render(context),
+                             "desk": templates.get_template("_email_desk.html").render(context),
+                             "running": state["running"], "error": error}, status_code=status_code, headers=headers)
+    return templates.TemplateResponse(request, "email.html", context, status_code=status_code, headers=headers)
+
+
+@app.get("/learn/email-joe", response_class=HTMLResponse)
+def email_lesson(request: Request, goal: str = "summary", attempt: str | None = None):
+    user = get_current_user(request)
+    if not user:
+        if "application/json" in request.headers.get("accept", ""):
+            return JSONResponse({"error": "Your session expired. Sign in again; your draft is kept in this tab."}, status_code=401)
+        return RedirectResponse("/login?next=/learn/email-joe", status_code=303)
+    try:
+        return _email_response(request, user, goal, run_id=attempt)
+    except learning.LessonError as e:
+        raise HTTPException(e.status_code, str(e))
+
+
+@app.post("/learn/email-joe/{action}")
+async def email_action(request: Request, action: str, goal: str = Form("summary"), run_id: str = Form(...),
+                       request_id: str = Form(""), subject: str = Form(""), body: str = Form(""),
+                       protected: bool = Form(False)):
+    if action not in ("send", "hint", "reset") or goal not in email_lab.GOALS:
+        raise HTTPException(404)
+    user = get_current_user(request)
+    if not user:
+        if "application/json" in request.headers.get("accept", ""):
+            return JSONResponse({"error": "Your session expired. Sign in again; your draft is kept in this tab."}, status_code=401)
+        return RedirectResponse("/login?next=/learn/email-joe", status_code=303)
+    try:
+        if action == "send":
+            await email_lab.submit(user["id"], goal, run_id, request_id, subject, body, protected)
+        elif action == "hint":
+            email_lab.hint(user["id"], goal, run_id)
+        else:
+            email_lab.reset(user["id"], goal, run_id)
+    except learning.LessonError as e:
+        return _email_response(request, user, goal, error=str(e), status_code=e.status_code,
+                               draft={"subject": subject, "body": body, "protected": protected} if action == "send" else None)
+    if "application/json" in request.headers.get("accept", ""):
+        return _email_response(request, user, goal)
+    return RedirectResponse("/learn/email-joe?goal=" + goal, status_code=303)
 
 
 @app.get("/learn/{slug}", response_class=HTMLResponse)

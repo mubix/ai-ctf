@@ -49,11 +49,23 @@
     </div>
   </section>
   {% endfor %}
+  <section class="mission-entry" aria-labelledby="email-mission">
+    <div class="mission-number" aria-hidden="true">4</div>
+    <div>
+      <p class="mission-meta">Email scenario · Three objectives · Indirect injection</p>
+      <h2 id="email-mission">Email Joe in Product Sales</h2>
+      <p>Write an email that Joe's AI assistant will summarize. Watch his Windows-style desk,
+        then try to mislead the briefing, disclose a fictional file, or change a sales record.</p>
+      <p class="progress-label">{{ email_progress.values()|selectattr('completed_at')|list|length }} of 3 objectives reached</p>
+      <a class="button" href="/learn/email-joe">{% if email_progress %}Return to Joe's inbox{% else %}Email Joe{% endif %}</a>
+      <p class="small muted">Real model responses. Simulated files, sales records, and email delivery.</p>
+    </div>
+  </section>
   <section class="practice-entry">
     <h2>Explore the practice labs</h2>
     <p>Already comfortable with the basics? Try HR data access, code review, checkout,
       and web retrieval. These original CTF labs are self-directed; guided completion
-      tracking covers the three lessons above.</p>
+      tracking covers the lessons above.</p>
     <a href="/chat/customer_service">Open practice labs</a>
   </section>
   <aside class="lab-notice" aria-label="Lab scope and privacy">

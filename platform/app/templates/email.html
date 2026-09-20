@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Email Joe — Anvil Industries{% endblock %}
+{% block body %}
+{% include "_learning_header.html" %}
+<main class="lesson-shell email-shell">
+  <nav class="breadcrumb" aria-label="Learning navigation"><a href="/learn">All lessons</a><span>Email Joe in Product Sales</span></nav>
+  <div id="email-error" class="notice error" role="alert" {% if not error %}hidden{% endif %}>{{ error or '' }}</div>
+  <p id="email-signin" hidden><a href="/login?next={{ lesson.url|urlencode }}">Sign in to resume this objective</a></p>
+  <p id="email-status" class="request-status" role="status" aria-live="polite"></p>
+  <noscript><p class="notice">Email submission and hints work without JavaScript. The activity and summary appear after processing; automatic updates and unsent draft recovery need JavaScript.</p></noscript>
+  <div id="email-content">{% include "_email_content.html" %}</div>
+</main>
+<script src="/static/email.js" defer></script>
+{% endblock %}

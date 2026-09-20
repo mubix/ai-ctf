@@ -62,3 +62,38 @@ CREATE TABLE IF NOT EXISTS workflow_trials (
     started_at INTEGER NOT NULL,
     UNIQUE(run_id, request_id)
 );
+
+-- Joe's email lab keeps immutable messages and actual model/tool activity.
+CREATE TABLE IF NOT EXISTS email_progress (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    goal TEXT NOT NULL,
+    current_run TEXT,
+    hint_level INTEGER NOT NULL DEFAULT 0,
+    completed_at TEXT,
+    completed_with_example INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY(user_id, goal)
+);
+CREATE TABLE IF NOT EXISTS email_runs (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    goal TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS email_runs_user ON email_runs(user_id, goal);
+CREATE TABLE IF NOT EXISTS email_trials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL REFERENCES email_runs(id),
+    request_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    protected INTEGER NOT NULL DEFAULT 0,
+    canary TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('running','completed','failed')),
+    events TEXT NOT NULL DEFAULT '[]',
+    result TEXT,
+    workspace TEXT NOT NULL,
+    success INTEGER NOT NULL DEFAULT 0,
+    feedback TEXT,
+    started_at INTEGER NOT NULL,
+    UNIQUE(run_id, request_id)
+);

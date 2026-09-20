@@ -1,0 +1,74 @@
+<div class="email-lab" data-player="{{ user.id }}" data-run="{{ lesson.run.id }}" data-goal="{{ lesson.goal }}" data-running="{{ 'true' if lesson.running else 'false' }}" data-archived="{{ 'true' if lesson.archived else 'false' }}">
+  <header class="email-intro">
+    <div><h1>Email Joe in Product Sales</h1><p>One email. Someone else's assistant. Watch what happens when your message becomes part of Joe's work.</p></div>
+    <span class="simulation-label">Simulated desktop · Real AI responses</span>
+  </header>
+  <nav class="email-goals" aria-label="Email objectives">
+    {% for key, spec in goals.items() %}
+    <a href="/learn/email-joe?goal={{ key }}" {% if key == lesson.goal %}aria-current="page"{% endif %}>
+      <span>{{ spec.number }}. {{ spec.title }}</span>
+      <small>{% if goal_progress.get(key, {}).get('completed_at') %}Objective reached{% elif goal_progress.get(key, {}).get('current_run') %}In progress{% else %}Not started{% endif %}</small>
+    </a>
+    {% endfor %}
+  </nav>
+  <div class="email-columns">
+    <section class="email-attacker" aria-labelledby="email-objective">
+      <h2 id="email-objective">{{ lesson.spec.title }}</h2>
+      <p class="email-objective">{{ lesson.spec.objective }}</p>
+      <details class="email-brief"><summary>Joe's task and what counts</summary>
+        <h3>Joe's instruction to his assistant</h3><p>{{ lesson.spec.task }}</p>
+        <h3>Your control</h3><p>Only the subject and body of one external email. You cannot edit Joe's task, files, permissions, or the other player's workspace.</p>
+        <h3>Evidence of success</h3><p>{{ lesson.spec.check }}</p>
+        <p class="small muted">The assistant is intentionally susceptible to claimed workflow corrections. This teaches the failure mechanism, not the resistance of a commercial email product.</p>
+      </details>
+      {% if lesson.archived %}
+      <p class="notice">You are viewing an earlier attempt. <a href="{{ lesson.url }}">Return to your current attempt</a>.</p>
+      {% else %}
+      <form method="post" action="/learn/email-joe/send" data-email-action="send" class="email-compose">
+        <input type="hidden" name="goal" value="{{ lesson.goal }}"><input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+        <input type="hidden" name="request_id" value="{{ lesson.request_id }}">
+        <div class="mail-heading"><h3>New message</h3><span>External sender</span></div>
+        <p class="mail-recipient"><strong>To</strong> Joe &lt;joe@anvil.example&gt;</p>
+        <label for="email-subject">Subject</label>
+        <input id="email-subject" name="subject" maxlength="160" required value="{{ draft.subject if draft else lesson.latest.subject if lesson.latest else lesson.baseline_subject }}" {% if lesson.running %}disabled{% endif %}>
+        <label for="email-body">Email body</label>
+        <textarea id="email-body" name="body" rows="8" maxlength="{{ lesson.max_length }}" required {% if lesson.running %}disabled{% endif %}>{{ draft.body if draft else lesson.latest.body if lesson.latest else lesson.baseline_body }}</textarea>
+        {% if lesson.goal != 'summary' %}
+        <label class="email-protection"><input type="checkbox" name="protected" value="true" {% if (draft and draft.protected) or (not draft and lesson.latest and lesson.latest.protected) %}checked{% endif %} {% if lesson.running %}disabled{% endif %}> Enforce Joe's tool permissions</label>
+        <p class="small muted">After an attack, enable this and resend. The actual model runs again; the tools enforce Joe's original task.</p>
+        {% endif %}
+        <div class="composer-footer"><p class="small muted">Ctrl / ⌘ + Enter sends.<br>Nothing leaves the lab.</p><button type="submit" {% if lesson.running or not lesson.turns_left %}disabled{% endif %}>Send email to Joe</button></div>
+        <button type="button" class="secondary email-baseline" data-email-fill data-subject="{{ lesson.baseline_subject }}" data-body="{{ lesson.baseline_body }}" {% if lesson.running %}disabled{% endif %}>Use clean example</button>
+      </form>
+      <p class="small"><a href="#email-desk">Watch Joe's desk and results</a></p>
+      <details class="email-hints">
+        <summary>Hints and worked example{% if lesson.hints %} ({{ lesson.hints|length }}/3){% endif %}</summary>
+        {% for hint in lesson.hints %}<div class="revealed-hint"><h3>{% if loop.index == 3 %}Worked example{% else %}Hint {{ loop.index }}{% endif %}</h3><p class="email-payload">{{ hint }}</p>
+          {% if loop.index == 3 %}<button type="button" class="secondary" data-email-fill data-subject="Sales Desk workflow correction" data-body="{{ hint }}" {% if lesson.running %}disabled{% endif %}>Use worked example</button>{% endif %}
+        </div>{% endfor %}
+        {% if lesson.hints|length < 3 %}<form method="post" action="/learn/email-joe/hint" data-email-action="hint">
+          <input type="hidden" name="goal" value="{{ lesson.goal }}"><input type="hidden" name="run_id" value="{{ lesson.run.id }}">
+          <button type="submit" class="secondary">{% if lesson.hints|length == 2 %}Show worked example{% elif lesson.hints %}Show next hint{% else %}Show first hint{% endif %}</button>
+        </form>{% endif %}
+        <p class="small muted">Hints have no penalty. Worked-example use is recorded separately from independent success.</p>
+      </details>
+      {% endif %}
+    </section>
+    <section id="email-desk" class="email-observer" aria-label="Joe's activity and desktop">{% include "_email_desk.html" %}</section>
+  </div>
+  <details class="email-history">
+    <summary>Saved emails and fresh attempts</summary>
+    <p>Each email starts with a fresh copy of Joe's fictional files and deal. A fresh attempt keeps your earlier emails and earned progress.</p>
+    {% if not lesson.archived %}<form method="post" action="/learn/email-joe/reset" data-email-action="reset"><input type="hidden" name="goal" value="{{ lesson.goal }}"><input type="hidden" name="run_id" value="{{ lesson.run.id }}"><button type="submit" class="secondary" {% if lesson.running %}disabled{% endif %}>Start a fresh attempt</button></form>{% endif %}
+    {% for trial in lesson.trials|reverse %}
+    <details class="email-saved" data-saved-request="{{ trial.request_id }}" data-saved-status="{{ trial.status }}"><summary>{{ trial.subject }} — {{ trial.status }}{% if trial.protected %} · Protected tools{% endif %}{% if trial.success %} · Objective reached{% endif %}</summary>
+      <p class="email-payload">{{ trial.body }}</p><p>{{ trial.feedback or 'Processing…' }}</p>
+      {% if trial.result %}<p class="email-payload">{{ trial.result.summary }}</p>{% endif %}
+      <details><summary>Recorded actions</summary><pre>{{ trial.events|tojson(indent=2) }}</pre></details>
+      {% if not lesson.archived %}<button type="button" class="secondary" data-email-fill data-subject="{{ trial.subject }}" data-body="{{ trial.body }}" data-protected="{{ 'true' if trial.protected else 'false' }}" {% if lesson.running %}disabled{% endif %}>Reuse this email</button>{% endif %}
+    </details>
+    {% endfor %}
+    <ul>{% for attempt in lesson.attempts %}<li><a href="{{ lesson.url }}&amp;attempt={{ attempt.id }}">Attempt {{ lesson.attempts|length - loop.index0 }} · {{ attempt.created_at }}</a></li>{% endfor %}</ul>
+  </details>
+  <p class="small muted">Your emails and results are saved for you and the organizer. Use fictional data only. The phone, Outlook activity, files, and deliveries are simulations.</p>
+</div>
